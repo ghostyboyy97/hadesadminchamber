@@ -1,0 +1,95 @@
+html{
+    font-size: 100px;
+}
+html:root{
+    --font-size-base: 100px;
+}
+
+body{
+    width: 100vw;
+    height: 100vh;
+}
+
+.gui_container{
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+.srcom_ctr, .retime_ctr{
+    position: relative;
+    width: 50%;
+    height: 100%;
+    display: flex;
+}
+
+.retime_ctr__tabs{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    margin-left: 0.4em;
+    display: flex;
+}
+.retime_ctr__tab{
+    width: 2rem;
+    height: 0.5rem;
+    border: 2px solid red;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.2em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 0.08rem 0.08rem 0 0;
+    margin: 0.1rem 0.2rem 0 0;
+}
+
+.retime_ctr__tab.active{
+    border: 2px solid red;
+    background-color: red;
+    color: white;
+}
+
+.iframe_ctr{
+    position: absolute;
+    top: 0.6em;
+    left: 0;
+    display: none;
+    width: 100%;
+    height: calc(100% - 0.5em - 0.1em);
+}
+.iframe_ctr.active{
+    display: flex;
+}
+
+iframe{
+    width: 100%;
+    height: 100%;
+}
+
+.resize_divider{
+    position: absolute;
+    top: 0;
+    left: calc(50% - 5px);
+    width: 10px;
+    height: 100%;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: black;
+}
+
+.resize_divider__handle{
+    position: absolute;
+    width: 0.25em;
+    height: 1em;
+    background-color: red;
+    border: 1px solid white;
+    border-radius: 0.08em;
+    cursor: pointer;
+}

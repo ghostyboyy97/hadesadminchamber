@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>VerifyGUI</title>
+    <link type="text/css" rel="stylesheet" href="marx.min.css">
+    <link type="text/css" rel="stylesheet" href="custom.css">
+    <script src="touche-min.js" charset="utf-8"></script>
+    <script src="zepto.min.js" charset="utf-8"></script>
+    <script src="app.js" charset="utf-8"></script>
+</head>
+
+<body onload="main()">
+    <div class="gui_container">
+        <div class="srcom_ctr">
+            <iframe src="https://www.speedrun.com/modhub" frameborder="0"></iframe>
+        </div>
+        <div class="resize_divider">
+            <div class="resize_divider__handle"></div>
+        </div>
+        <div class="retime_ctr">
+            <div class="retime_ctr__tabs">
+                <div class="retime_ctr__tab active" data-js-iframe="youtube">youtube vod</div>
+                <div class="retime_ctr__tab" data-js-iframe="non_youtube">non-yt vod</div>
+            </div>
+            <div class="retime_ctr__iframes">
+                <div class="iframe_ctr active youtube">
+                    <iframe src="https://retime.mcbe.wtf/" frameborder="0"></iframe>
+                </div>
+                <div class="iframe_ctr non_youtube">
+                    <iframe src="https://www.calculator.net/time-calculator.html" frameborder="0"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
