@@ -6,9 +6,9 @@ import { useState, useCallback } from "react";
 
 
 // TODO
-// 1 - we need UI to prompt the user to go to https://cors-anywhere.herokuapp.com/corsdemo and request temporary access
-// 2 - we need UI to prompt the user for their API key
-// 3 - checkAuth()
+// DONE 1 - we need UI to prompt the user to go to https://cors-anywhere.herokuapp.com/corsdemo and request temporary access
+// DONE 2 - we need UI to prompt the user for their API key
+// DONE 3 - checkAuth()
 // 4 - check which games the user is a moderator of/check user ID against mod list
 // 5 - setup Get Next Run button to grab runs from relevant queues
 // 6 - (after subsequent step setup) - check hold/active verifying flags in database and check timeouts there; assign a valid run to current verifier
@@ -24,16 +24,21 @@ import { useState, useCallback } from "react";
 
 interface keyInputProps {
   placeholder: string;
-  blur: () => {};
+  blur: (event: any) => {};
 }
 interface runButtonProps {
   title: string;
+  authInfo: object;
   click: () => {};
 }
 
-function GetRunButton({ title, click }: runButtonProps) {
+function GetRunButton({ title, authInfo, click }: runButtonProps) {
+  console.log(authInfo)
   return (
-    <button onClick={click} className="w-sm bg-sky-500 hover:bg-sky-700 cursor-pointer mt-8">{title}</button>
+    <div>
+      <h2>Welcome, {authInfo.data.names.international}</h2>
+      <button onClick={click} className="w-sm bg-sky-500 hover:bg-sky-700 cursor-pointer mt-8">{title}</button>
+    </div>
   );
 }
 
@@ -46,14 +51,10 @@ function APIKeyInput({ placeholder, blur }: keyInputProps) {
 export default function Home() {
   let runList = [];
   const HADES = "o1y9okr6";
-  const [value, setValue] = useState("Change me");
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    console.log(event.currentTarget.value);
-    setValue(event.currentTarget.value)
-  }
-  function checkKeyValid() {
-    console.log(value)
-  }
+  const [verifKey, setVerifKey] = useState("");
+  const [verifSuccess, setVerifSuccess] = useState(false);
+  // todo - define expected properties of authData? not sure what the best practice is here, seeing an error on it tho
+  const [authData, setAuthData] = useState({});
 
   async function getH1Runs() {
     const url = `https://www.speedrun.com/api/v1/runs?game=${HADES}&orderby=submitted&direction=desc`;
@@ -72,17 +73,18 @@ export default function Home() {
   }
 
 
-  async function checkAuth() {
+  async function checkAuth(event: any) {
     const url = "https://cors-anywhere.herokuapp.com/https://www.speedrun.com/api/v1/profile";
-    // const url = "https://www.speedrun.com/api/v1/profile";
     try {
-      console.log(value)
+      setVerifKey(event.currentTarget.value);
+      // TODO - only seems to successfully check auth on second blur?
+      console.log(verifKey)
       let response = await fetch(url, {
         method: "GET",
         headers: {
           "Host": "www.speedrun.com",
           "Accept": "application/json",
-          "X-API-Key": value,
+          "X-API-Key": verifKey,
         }
       });
       if (!response.ok) {
@@ -90,17 +92,32 @@ export default function Home() {
       }
       const json = await response.json();
       console.log(json)
+      setAuthData(json);
+      setVerifSuccess(true);
+      console.log(verifSuccess);
     } catch (exc: any) {
       console.error(exc.message)
+      // TODO - show error to the user
+      setVerifSuccess(false)
     }
   }
 
-
   return (
     <div className="flex flex-col justify-start items-center w-dvw h-dvh">
+
       <h1 className="font-bold text-8xl w-fit">Hades Admin Chamber</h1>
-      <APIKeyInput blur={checkAuth} placeholder="Enter your sr.com API key here" />
-      <GetRunButton click={getH1Runs} title="Get next run in queue" />
+      <div>First, go to <a className="text-red-500" target="_blank" href="https://cors-anywhere.herokuapp.com/corsdemo">this link</a> and request temporary access.</div>
+      
+      <div>Then, <APIKeyInput blur={checkAuth} placeholder="Enter your sr.com API key here" /></div>
+      
+      {(verifSuccess && Object.keys(authData).length > 0) && 
+        (
+        <div>
+          <GetRunButton click={getH1Runs} authInfo={authData} title="Get next run in queue" />
+        </div>
+        )
+      }
+
     </div>
   );
 }
