@@ -28,12 +28,11 @@ interface keyInputProps {
 }
 interface runButtonProps {
   title: string;
-  authInfo: object;
-  click: () => {};
+  authInfo: object; // TODO - define typing for authInfo
+  click: (event: any) => {};
 }
 
 function GetRunButton({ title, authInfo, click }: runButtonProps) {
-  console.log(authInfo)
   return (
     <div>
       <h2>Welcome, {authInfo.data.names.international}</h2>
@@ -43,6 +42,7 @@ function GetRunButton({ title, authInfo, click }: runButtonProps) {
 }
 
 function APIKeyInput({ placeholder, blur }: keyInputProps) {
+  // TODO - style input so that it hides the API key by default, maybe add a toggle to show it?
   return (
     <input onBlur={blur} className="w-lg h-8 p-2 mt-4 border border-white rounded-sm" type="text" placeholder={placeholder}></input>
   )
@@ -51,6 +51,8 @@ function APIKeyInput({ placeholder, blur }: keyInputProps) {
 export default function Home() {
   let runList = [];
   const HADES = "o1y9okr6";
+  const HADES_2 = "3dxy5vv6";
+  const HADES_CE = "369pqq31";
   const [verifKey, setVerifKey] = useState("");
   const [verifSuccess, setVerifSuccess] = useState(false);
   // todo - define expected properties of authData? not sure what the best practice is here, seeing an error on it tho
@@ -63,12 +65,33 @@ export default function Home() {
         method: "GET",
       });
       if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`)
+        throw new Error(`Response status: ${response.status}`);
       }
       const json = await response.json();
       console.log(json)
     } catch (exc: any) {
       console.error(exc.message)
+    }
+  }
+
+  async function getModeratedGames(){
+    const url = `https://www.speedrun.com/api/v1/games?moderator=${authData.data.id}`;
+    try {
+      let response = await fetch(url, {
+        method: "GET",
+      });
+      if (!response.ok){
+        throw new Error(`Response status: ${response.status}`);
+      }
+      const json = await response.json();
+      console.log(json);
+
+      // json.data is an array of all games this user moderates
+      // TODO - if empty/error, assuming they arent a moderator? test with someone's profile id here, handle UI accordingly
+      // TODO - for each game, pass its ID into getRuns(), have getRuns() set up some conditional to handle checking when all runs area ready
+      // TODO - show "get next run" button once runsList is populated
+    } catch (exc: any){
+      console.error(exc.message);
     }
   }
 
@@ -95,6 +118,7 @@ export default function Home() {
       setAuthData(json);
       setVerifSuccess(true);
       console.log(verifSuccess);
+      getModeratedGames();
     } catch (exc: any) {
       console.error(exc.message)
       // TODO - show error to the user

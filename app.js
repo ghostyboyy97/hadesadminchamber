@@ -3,7 +3,7 @@ const tm = "touchmove";
 const te = "touchend";
 let isResizing = false;
 let api_key = "";
-const HADES = "o1y9okr6";
+
 
 function main(){
     // v1
@@ -109,7 +109,7 @@ function getAuth2(){
         }
     }
     testReq.open("GET", "https://cors-anywhere.herokuapp.com/https://www.speedrun.com/api/v1/profile", true)
-    testReq.setRequestHeader("X-API-Key", api_key)
+    testReq.setRequestHeader("X-API-Key", "np9eme8wcxxbihv3uqveddl1g")
     testReq.send();
 }
 function getGameVariables(category){
