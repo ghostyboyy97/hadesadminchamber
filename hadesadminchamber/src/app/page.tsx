@@ -45,6 +45,7 @@ interface runButtonProps {
 }
 interface runInfoProps{
   runData: object;
+  runner: object;
 }
 
 const gameIDToGameStringMap: object = {
@@ -66,7 +67,6 @@ function APIKeyInput({ placeholder, blur }: keyInputProps) {
     <input onBlur={blur} className="w-lg h-8 p-2 mt-4 border border-white rounded-sm" type="password" placeholder={placeholder}></input>
   )
 }
-
 
 
 
@@ -104,7 +104,7 @@ function updateTimeOnRun(val: string, timeType: string){
 
 
 
-function RunDisplay({runData}: runInfoProps){
+function RunDisplay({runData, runner}: runInfoProps){
   console.log(runData)
   let videoEmbedForm = runData.videos.links[0].uri;
   if (videoEmbedForm.includes("youtube")){
@@ -151,6 +151,9 @@ function RunDisplay({runData}: runInfoProps){
     }
     rtaSec = realTime;
   }
+
+  console.log("RUNNER INFO")
+  console.log(runner)
   // TODO - category handling
   // TODO - values object processing for things like modded/seeded/version/aspect
   return (
@@ -178,6 +181,26 @@ export default function Home() {
   const [allGames, setAllGames] = useState(Array(0));
   const [nextRunInQueue, setNextRunInQueue] = useState({});
   const [h1SRComVariables, seth1SRComVariables] = useState({});
+  const [h1Runner, setH1Runner] = useState({});
+
+  async function getRunnerFromID(user: string = "") {
+    console.log("getting run user...")
+    const url = `https://www.speedrun.com/api/v1/users/${user}`;
+    try{
+      let resp = await fetch(url, {
+        method: "GET",
+      });
+      if (!resp.ok){
+        throw new Error(`Response status: ${resp.status}`);
+      }
+      const json = await resp.json()
+      console.log(json);
+      console.log("get h1 variables - success!")
+      setH1Runner(json);
+    } catch (exc: any){
+      console.error(exc.message);
+    }
+  }
 
   async function getH1SRComVariables(category: string = "") {
     console.log("getting h1 variables...")
@@ -213,17 +236,18 @@ export default function Home() {
       console.log(json.data);
       if (json.data.length > 0){
         setNextRunInQueue(json.data[0]);
+        getH1SRComVariables(json.data[0].category);
+        getRunnerFromID(nextRunInQueue.players[0].id);
       }
-      getH1SRComVariables(json.data[0].category);
       // TODO - else, queues are empty!
     } catch (exc: any) {
       console.error(exc.message)
     }
   }
 
-  async function getModeratedGames(){
+  async function getModeratedGames(userID: string){
     console.log("getting moderated games...");
-    const url = `https://www.speedrun.com/api/v1/games?moderator=${authData.data.id}`;
+    const url = `https://www.speedrun.com/api/v1/games?moderator=${userID}`;
     try {
       let response = await fetch(url, {
         method: "GET",
@@ -253,29 +277,27 @@ export default function Home() {
 
   async function checkAuth(event: any) {
     console.log("checking auth...");
+    console.log(event.target.value)
     const url = "https://cors-anywhere.herokuapp.com/https://www.speedrun.com/api/v1/profile";
     try {
-      setVerifKey(event.currentTarget.value);
-      // TODO - only seems to successfully check auth on second blur?
-      console.log(verifKey)
+      setVerifKey(event.target.value);
       let response = await fetch(url, {
         method: "GET",
         headers: {
           "Host": "www.speedrun.com",
           "Accept": "application/json",
-          "X-API-Key": verifKey,
+          "X-API-Key": event.target.value,
         }
       });
       if (!response.ok) {
         throw new Error(`Response status: ${response.status}`);
       }
       const json = await response.json();
-      console.log(json)
       console.log("checking auth - success!");
-      setAuthData(json);
       setVerifSuccess(true);
-      console.log(verifSuccess);
-      getModeratedGames();
+      setAuthData(json);
+      getModeratedGames(json.data.id);
+      
     } catch (exc: any) {
       console.error(exc.message)
       // TODO - show error to the user
@@ -300,7 +322,7 @@ export default function Home() {
         )
       }
       {(Object.keys(nextRunInQueue).length > 0) &&
-        <RunDisplay runData={nextRunInQueue}/>
+        <RunDisplay runData={nextRunInQueue} runner={h1Runner}/>
       }
 
     </div>
