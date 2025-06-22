@@ -5,10 +5,11 @@ import Image from "next/image";
 import { useState, useCallback } from "react";
 
 
+// sr.com API - https://github.com/speedruncomorg/api
 
 // TODO
 // DONE 1 - we need UI to prompt the user to go to https://cors-anywhere.herokuapp.com/corsdemo and request temporary access
-// DONE 2 - we need UI to prompt the user for their API key
+// DONE 2 - we need UI to prompt the user for their API key 
 // DONE 3 - checkAuth()
 // DONE 4 - check which games the user is a moderator of/check user ID against mod list
 // DONE 5 - setup Get Next Run button to grab runs from H1 QUEUES queues
@@ -61,7 +62,6 @@ function GetRunButton({ title, authInfo, click }: runButtonProps) {
 }
 
 function APIKeyInput({ placeholder, blur }: keyInputProps) {
-  // TODO - style input so that it hides the API key by default, maybe add a toggle to show it?
   return (
     <input onBlur={blur} className="w-lg h-8 p-2 mt-4 border border-white rounded-sm" type="password" placeholder={placeholder}></input>
   )
@@ -154,15 +154,15 @@ function RunDisplay({runData}: runInfoProps){
   let runValues = runData.values;
 
   // 0nwork5l = game version
-  let runVersion = runData.values["0nwork5l"];
+  let runVersion = runValues["0nwork5l"];
   runVersion = categoryData.find((el)=>{return el.id === "0nwork5l"}).values.values[runVersion].label;
 
   // jlzre7x8 - modded vs unmodded (for OwO at least - different per category?)
-  let isRunModded = runData.values["jlzre7x8"];
+  let isRunModded = runValues["jlzre7x8"];
   isRunModded = categoryData.find((el)=>{return el.id === "jlzre7x8"}).values.values[isRunModded].label;
 
   // jlzre7x8 - modded vs unmodded (for OwO at least - different per category?)
-  let runWeapon = runData.values["dloy46m8"];
+  let runWeapon = runValues["dloy46m8"];
   runWeapon = categoryData.find((el)=>{return el.id === "dloy46m8"}).values.values[runWeapon].label;
   
 
