@@ -105,7 +105,6 @@ function updateTimeOnRun(val: string, timeType: string){
 
 
 function RunDisplay({runData, runner}: runInfoProps){
-  console.log(runData)
   let videoEmbedForm = runData.videos.links[0].uri;
   if (videoEmbedForm.includes("youtube")){
     // link comes in 
@@ -160,11 +159,11 @@ function RunDisplay({runData, runner}: runInfoProps){
     <div className="flex flex-col justify-start items-center w-dvw h-dvh">
       <iframe className="w-4xl h-auto aspect-video" src={videoEmbedForm}></iframe>
 
-      <div>Date: {runData.date}, Submitted: {runData.submitted}, Submitted by: {runData.players[0].id}</div>
+      <div>Date: {runData.date}, Submitted: {runData.submitted}, Submitted by: {runner.data.names.international}</div>
       <div>Game: {gameIDToGameStringMap[runData.game]}, Major update: (set value here), Version: (set value here), Platform: (set value here)</div>
       <div>Category: {runData.category}, Heat? (optional), Seeded?: (set value here), Modded? (set value here), Aspect: (set value here)</div>
       <div>RTA (required): <input type="number" min={0} onChange={e => updateTimeOnRun(e.target.value, "rta")} placeholder={rtaHrs.toString()} id="rta_hrs"></input>hrs, <input type="number" min={0} max={59} onChange={e => updateTimeOnRun(e.target.value, "rta")} placeholder={rtaMins.toString()} id="rta_mins"></input>mins, <input type="number" min={0} max={59} onChange={e => updateTimeOnRun(e.target.value, "rta")} placeholder={rtaSec.toString()} id="rta_sec"></input>sec</div>
-      <textarea id="modNote" className="bg-white w-4xl h-64" value={runData.comment ?? ""}></textarea>
+      <textarea id="modNote" className="bg-white w-4xl h-64" defaultValue={runData.comment ?? ""}></textarea>
     </div>
   )
 }
@@ -195,7 +194,7 @@ export default function Home() {
       }
       const json = await resp.json()
       console.log(json);
-      console.log("get h1 variables - success!")
+      console.log("get h1 runner - success!")
       setH1Runner(json);
     } catch (exc: any){
       console.error(exc.message);
@@ -237,7 +236,7 @@ export default function Home() {
       if (json.data.length > 0){
         setNextRunInQueue(json.data[0]);
         getH1SRComVariables(json.data[0].category);
-        getRunnerFromID(nextRunInQueue.players[0].id);
+        getRunnerFromID(json.data[0].players[0].id);
       }
       // TODO - else, queues are empty!
     } catch (exc: any) {
@@ -321,7 +320,7 @@ export default function Home() {
         </div>
         )
       }
-      {(Object.keys(nextRunInQueue).length > 0) &&
+      {(Object.keys(nextRunInQueue).length > 0 && Object.keys(h1Runner).length > 0) &&
         <RunDisplay runData={nextRunInQueue} runner={h1Runner}/>
       }
 
