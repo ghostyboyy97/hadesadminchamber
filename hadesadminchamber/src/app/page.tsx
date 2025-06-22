@@ -13,8 +13,8 @@ import { useState, useCallback } from "react";
 // DONE 4 - check which games the user is a moderator of/check user ID against mod list
 // DONE 5 - setup Get Next Run button to grab runs from H1 QUEUES queues
 // HOLD 6 - (after subsequent step setup) - check hold/active verifying flags in database and check timeouts there; assign a valid run to current verifier
-// 7 - put run into the page
-// 7.1 - on get a game, get all its category values and such
+// DONE 7 - put run into the page
+// DONE 7.1 - on get a game, get all its category values and such
 // 8 - setup UI for changing each field on the run that's relevant
 // 9 - setup retiming tools built into page
 // 10 - auto-gen mod retime message if timestamp doesn't match (w/ ms handling for h2)
@@ -45,7 +45,6 @@ interface runButtonProps {
 }
 interface runInfoProps{
   runData: object;
-  runner: object;
 }
 
 const gameIDToGameStringMap: object = {
@@ -104,7 +103,7 @@ function updateTimeOnRun(val: string, timeType: string){
 
 
 
-function RunDisplay({runData, runner}: runInfoProps){
+function RunDisplay({runData}: runInfoProps){
   let videoEmbedForm = runData.videos.links[0].uri;
   if (videoEmbedForm.includes("youtube")){
     // link comes in 
@@ -151,17 +150,31 @@ function RunDisplay({runData, runner}: runInfoProps){
     rtaSec = realTime;
   }
 
-  console.log("RUNNER INFO")
-  console.log(runner)
-  // TODO - category handling
+  let categoryData = runData.category.data.variables.data;
+  let runValues = runData.values;
+
+  // 0nwork5l = game version
+  let runVersion = runData.values["0nwork5l"];
+  runVersion = categoryData.find((el)=>{return el.id === "0nwork5l"}).values.values[runVersion].label;
+
+  // jlzre7x8 - modded vs unmodded (for OwO at least - different per category?)
+  let isRunModded = runData.values["jlzre7x8"];
+  isRunModded = categoryData.find((el)=>{return el.id === "jlzre7x8"}).values.values[isRunModded].label;
+
+  // jlzre7x8 - modded vs unmodded (for OwO at least - different per category?)
+  let runWeapon = runData.values["dloy46m8"];
+  runWeapon = categoryData.find((el)=>{return el.id === "dloy46m8"}).values.values[runWeapon].label;
+  
+
+  // TODO - dermine if show major update, heat, seeded vs unseeded
   // TODO - values object processing for things like modded/seeded/version/aspect
   return (
     <div className="flex flex-col justify-start items-center w-dvw h-dvh">
       <iframe className="w-4xl h-auto aspect-video" src={videoEmbedForm}></iframe>
 
-      <div>Date: {runData.date}, Submitted: {runData.submitted}, Submitted by: {runner.data.names.international}</div>
-      <div>Game: {gameIDToGameStringMap[runData.game]}, Major update: (set value here), Version: (set value here), Platform: (set value here)</div>
-      <div>Category: {runData.category}, Heat? (optional), Seeded?: (set value here), Modded? (set value here), Aspect: (set value here)</div>
+      <div>Date: {runData.date}, Submitted: {runData.submitted}, Submitted by: {runData.players.data[0].names.international}</div>
+      <div>Game: {runData.game.data.names.international}, Major update?: (only relevant for h2), Version: {runVersion}, Platform: {runData.platform.data.name}</div>
+      <div>Category: {runData.category.data.name}, Heat?: (optional), Seeded?: (set value here), Modded?: {isRunModded}, Weapon/Aspect: {runWeapon}</div>
       <div>RTA (required): <input type="number" min={0} onChange={e => updateTimeOnRun(e.target.value, "rta")} placeholder={rtaHrs.toString()} id="rta_hrs"></input>hrs, <input type="number" min={0} max={59} onChange={e => updateTimeOnRun(e.target.value, "rta")} placeholder={rtaMins.toString()} id="rta_mins"></input>mins, <input type="number" min={0} max={59} onChange={e => updateTimeOnRun(e.target.value, "rta")} placeholder={rtaSec.toString()} id="rta_sec"></input>sec</div>
       <textarea id="modNote" className="bg-white w-4xl h-64" defaultValue={runData.comment ?? ""}></textarea>
     </div>
@@ -179,46 +192,30 @@ export default function Home() {
   const [authData, setAuthData] = useState({});
   const [allGames, setAllGames] = useState(Array(0));
   const [nextRunInQueue, setNextRunInQueue] = useState({});
-  const [h1SRComVariables, seth1SRComVariables] = useState({});
-  const [h1Runner, setH1Runner] = useState({});
 
-  async function getRunnerFromID(user: string = "") {
-    console.log("getting run user...")
-    const url = `https://www.speedrun.com/api/v1/users/${user}`;
-    try{
-      let resp = await fetch(url, {
+  async function getNextRunInQueue(runID: string){
+    // testing the embedding as suggested by sr.com
+    console.log("getting run passed in from getH1Runs")
+    const url = `https://www.speedrun.com/api/v1/runs/${runID}?embed=players,category.variables,game.variables,platform.variables`;
+    try {
+      let response = await fetch(url, {
         method: "GET",
       });
-      if (!resp.ok){
-        throw new Error(`Response status: ${resp.status}`);
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
       }
-      const json = await resp.json()
-      console.log(json);
-      console.log("get h1 runner - success!")
-      setH1Runner(json);
-    } catch (exc: any){
-      console.error(exc.message);
+      const json = await response.json();
+      console.log("getting h1 runs - success!")
+      console.log(json.data);
+      if (json.data){
+        setNextRunInQueue(json.data);
+      }
+      // TODO - else, queues are empty!
+    } catch (exc: any) {
+      console.error(exc.message)
     }
   }
 
-  async function getH1SRComVariables(category: string = "") {
-    console.log("getting h1 variables...")
-    const url = (category.length > 0) ? `https://www.speedrun.com/api/v1/categories/${category}/variables` : `https://www.speedrun.com/api/v1/games/${HADES}/variables`;
-    try{
-      let resp = await fetch(url, {
-        method: "GET",
-      });
-      if (!resp.ok){
-        throw new Error(`Response status: ${resp.status}`);
-      }
-      const json = await resp.json()
-      console.log(json);
-      console.log("get h1 variables - success!")
-      seth1SRComVariables(json);
-    } catch (exc: any){
-      console.error(exc.message);
-    }
-  }
 
   async function getH1Runs() {
     console.log("getting h1 runs...")
@@ -234,9 +231,12 @@ export default function Home() {
       console.log("getting h1 runs - success!")
       console.log(json.data);
       if (json.data.length > 0){
-        setNextRunInQueue(json.data[0]);
-        getH1SRComVariables(json.data[0].category);
-        getRunnerFromID(json.data[0].players[0].id);
+        // setNextRunInQueue(json.data[0]);
+        // getH1SRComVariables(json.data[0].category);
+        // getRunnerFromID(json.data[0].players[0].id);
+
+        console.log("testing run specific embedding")
+        getNextRunInQueue(json.data[0].id);
       }
       // TODO - else, queues are empty!
     } catch (exc: any) {
@@ -275,6 +275,7 @@ export default function Home() {
 
 
   async function checkAuth(event: any) {
+    // TODO - need to locally store auth success and auth key, check that locally stored confirmation as to not overwhelm heroku temp access
     console.log("checking auth...");
     console.log(event.target.value)
     const url = "https://cors-anywhere.herokuapp.com/https://www.speedrun.com/api/v1/profile";
@@ -305,13 +306,15 @@ export default function Home() {
   }
 
   // TODO - once H1 case confirmed, change getH1Runs to getAllValidRuns
+
+  // TODO - temp changed APIKeyInput blur from checkAuth to getH1Runs to prevent 429 error
   return (
     <div className="flex flex-col justify-start items-center w-dvw h-dvh">
 
       <h1 className="font-bold text-8xl w-fit">Hades Admin Chamber</h1>
       <div>First, go to <a className="text-red-500" target="_blank" href="https://cors-anywhere.herokuapp.com/corsdemo">this link</a> and request temporary access.</div>
       
-      <div>Then, <APIKeyInput blur={checkAuth} placeholder="Enter your sr.com API key here" /></div>
+      <div>Then, <APIKeyInput blur={getH1Runs} placeholder="Enter your sr.com API key here" /></div>
       
       {(verifSuccess && Object.keys(authData).length > 0 && allGames.length > 0) && 
         (
@@ -320,8 +323,8 @@ export default function Home() {
         </div>
         )
       }
-      {(Object.keys(nextRunInQueue).length > 0 && Object.keys(h1Runner).length > 0) &&
-        <RunDisplay runData={nextRunInQueue} runner={h1Runner}/>
+      {(Object.keys(nextRunInQueue).length > 0) &&
+        <RunDisplay runData={nextRunInQueue}/>
       }
 
     </div>
